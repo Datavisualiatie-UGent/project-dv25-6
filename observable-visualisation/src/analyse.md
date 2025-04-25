@@ -1,19 +1,7 @@
 ---
-theme: dashboard
-title: work-in-progress 
+title: Analyse
 toc: true
 ---
-
-# Vertraagd: Een analyse van treinvertragingen in België
-
-<br/>
-
-## Intro
-
-Treinvertragingen, afschaffingen, stakingen — we kennen het allemaal. Voor duizenden pendelaars in België vormen ze een dagelijkse bron van frustratie. Maar hoe ernstig zijn die vertragingen eigenlijk? En valt er een patroon te ontdekken, bijvoorbeeld in het tijdstip of het type trein?
-
-In dit project duiken we in een dataset van [Infrabel](https://opendata.infrabel.be/explore/dataset/data_punctualite_typedetrain/table/?disjunctive.rel&sort=maand). We zoeken uit hoe vaak vertragingen voorkomen, wanneer ze zich het vaakst voordoen, en welke treintypes het kwetsbaarst zijn. Zo proberen we grip te krijgen op een probleem waar velen dagelijks mee te maken krijgen.
-
 
 ## Treintypes
 
@@ -161,8 +149,6 @@ const selected_types_input = view(Inputs.checkbox(train_types, {
 Plot.plot({
     y: { grid: true, label: "Number of operated trains" },
     x: { type: "utc", label: "Month" },
-    width: 1500,
-    height: 500,
     color: {
         type: "categorical",
         domain: train_types,
@@ -196,8 +182,6 @@ Wanneer we de stiptheid van de treinen door de jaren heen bekijken, kunnen we mo
 Plot.plot({
     y: { grid: true, label: "Punctuality (%)", domain: [0, 100] },
     x: { type: "utc", label: "Month" },
-    width: 1500,
-    height: 500,
     color: {
         type: "categorical",
         domain: train_types,
@@ -295,8 +279,6 @@ display(Plot.plot({
             tip: true
         }),
   ],
-  width: 1000,
-  height: 400,
   marginBottom: 40
 }));
 ```
@@ -326,8 +308,6 @@ display(Plot.plot({
             tip: true
         }),
   ],
-  width: 1000,
-  height: 400,
   marginBottom: 40
 }));
 ```
@@ -359,7 +339,6 @@ const delay_mode = view(Inputs.select(["Average Delay (relative)", "Minutes of d
 ```js
 Plot.plot({
   title: `Boxplot of ${delay_mode} per Train Type`,
-  width: 800,
   height: 400,
   marginLeft: 80,
   x: { label: delay_mode },
@@ -422,8 +401,6 @@ const cumulative_data = (() => {
 
 ```js
 Plot.plot({
-  width: 1500,
-  height: 500,
   marginLeft: 60,
   y: {
     grid: true,
