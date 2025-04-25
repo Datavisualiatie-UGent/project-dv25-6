@@ -243,9 +243,6 @@ const flattened = grouped_and_normalized_by_season.flatMap(([trainType, seasonDa
     }))
 );
 
-console.log("flattened data:", flattened);
-```
-```js
 const normalized = train_types.flatMap(type => {
     const filtered = flattened.filter(d => d["Train type"] === type);
     const total = d3.sum(filtered, d => d["Normalized delay"]);
@@ -263,8 +260,6 @@ const gridChartsData = normalized.sort((a, b) => d3.ascending(seasonOrder[a["sea
     ...data,
     ...layoutMap.get(data["Train type"])
 }));
-
-console.log(gridChartsData);
 
 const colorA = d3.scaleOrdinal()
     .domain(["spring", "summer", "autumn", "winter"])
