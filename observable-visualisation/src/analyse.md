@@ -315,7 +315,108 @@ display(Plot.plot({
 Op basis van al deze grafieken samen kunnen we echter geen duidelijk verband vaststellen tussen seizoen en vertraging. Zo zien we geen algemene trend over al de treintypes heen. De variaties lijken eerder willekeurig dan seizoensgebonden. Echter, als we ons beperken tot de 3 treintypes waarvoor we over alle jaren consistente data hebben, valt er wel iets interessants op.
 
 ```js
-const todo = "TODO"
+const trains = ["IC", "P", "L"];
+const filtered_train_types = seasonal_train_data.filter(d => trains.includes(d["Train type"]));
+const grouped_by_train_type = d3.rollups(
+    filtered_train_types,
+    v => ({
+        total_delay: d3.sum(v, d => d["Minutes of delay"]),
+        total_trains: d3.sum(v, d => d["Number of operated trains"])
+    }),
+    d => d["Train type"],
+    d => d.season
+);
+
+const flattened = grouped_by_train_type.flatMap(([trainType, seasonData]) => {
+    return seasonData.map(([season, cumulative]) => {
+        const normalized = cumulative.total_delay / cumulative.total_trains;
+        return {
+            "Train type": trainType,
+            "season": season,
+            "normalized": normalized
+        };
+    })
+});
+
+const total_per_train_type = {};
+
+for (const train of trains) {
+    total_per_train_type[train] = d3.sum(flattened.filter(d => d["Train type"] === train), d => d["normalized"]);
+}
+
+const percentagePerSeasonAndTrainType = {};
+
+const in_percentages = flattened.map(d => {
+    const val = Math.round(d["normalized"] * 1e2 / total_per_train_type[d["Train type"]]);
+    percentagePerSeasonAndTrainType[d["Train type"]] =  percentagePerSeasonAndTrainType[d["Train type"]] || {};
+    percentagePerSeasonAndTrainType[d["Train type"]][d.season] = val;
+
+    return {
+        ...d,
+        value: val
+    };
+});
+
+// fix the the floating point errors:
+for (const train of trains) {
+    const row = in_percentages.filter(d => d["Train type"] === train);
+    const total = d3.sum(row, d => d["value"]);
+    const error = 100 - total;
+
+    row[row.indexOf(row.reduce((prev, curr) => prev["value"] > curr["value"] ? prev : curr))]["value"] += error;
+}
+
+const result = trains.flatMap(t => {
+    const rows = in_percentages.filter(d => d["Train type"] === t);
+    rows.sort((a, b) => seasonOrder[a.season] < seasonOrder[b.season] ? -1 : 1);
+
+    let units = rows.flatMap(d => {
+        return Array(d["value"]).fill().map(() => {
+            return {
+                season: d.season,
+                type: t
+            }
+        });
+    });
+
+    if (units.length > 100) units.length = 100;
+    while (units.length < 100) units.push({season: null, type: t})
+    units = units.map((d, i) => ({...d}));
+
+    return units;
+});
+
+const color = d3.scaleOrdinal()
+    .domain(filtered_train_types.map(d => d.season))
+    .range(["#4B9CD3","#8BC34A","#FFC107","#FF5722"]);
+```
+
+```js
+display(
+    Plot.plot({
+        facet: {
+            data:    result,
+            x:       d => d.type,           // string‐accessor into each facet object
+            columns: result.length,    // force one column per train type
+            label:   null              // you can hide the “type” header if you like
+        },
+        title: "Normalized delay per season per train type",
+        x: { axis: null },
+        y: { axis: null },
+        color: {
+            domain: color.domain(),
+            range:  color.range(),
+            legend: true
+        },
+        marks: [
+            Plot.cell(result, Plot.stackX({
+                y: (_, i) => i % 10,
+                fill: "season",
+                title: d => `${d.season} - ${percentagePerSeasonAndTrainType[d.type][d.season]}%` 
+            }))
+        ]
+    })
+);
 ```
 
 Elk van deze treinen vertoont een duidelijk seizoenspatroon in de gemiddelde vertraging: de herfst kent de hoogste vertragingen, gevolgd door de winter, daarna de lente, en ten slotte de zomer, die het best scoort.
