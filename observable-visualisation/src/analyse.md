@@ -181,9 +181,9 @@ Daarom nemen we deze treintypes niet altijd mee in verdere vergelijkingen of ver
 Wanneer we de stiptheid van de treinen door de jaren heen bekijken, kunnen we mogelijk trends ontdekken: is de situatie verbeterd of net verslechterd? Hieronder tonen we dat aan de hand van een interactieve line chart.
 
 ```js
-const train_types_verdere_inzichten = Array.from(new Set(train_data.map(d => d["Train type"])));
+const train_types_insights = Array.from(new Set(train_data.map(d => d["Train type"])));
 
-const selected_types_input_verdere_inzichten = view(Inputs.checkbox(train_types, {
+const selected_types_input_insights = view(Inputs.checkbox(train_types, {
     value: train_types,
     label: "Selecteer trein types om te tonen",
     sort: true
@@ -196,13 +196,13 @@ Plot.plot({
     x: { type: "utc", label: "Maand" },
     color: {
         type: "categorical",
-        domain: train_types_verdere_inzichten,
+        domain: train_types_insights,
         legend: true,
         // range: ["#4682B4", "#FFA500", "#228B22", "#9370DB", "#DC143C", "#DAA520"]
     },
     marks: [
         Plot.lineY(
-            sorted_train_data.filter(d => selected_types_input_verdere_inzichten.includes(d["Train type"])),
+            sorted_train_data.filter(d => selected_types_input_insights.includes(d["Train type"])),
             {
                 x: "Month",
                 y: "Punctuality",
