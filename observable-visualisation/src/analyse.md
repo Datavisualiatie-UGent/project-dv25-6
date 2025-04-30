@@ -19,6 +19,8 @@ Niet elke trein is hetzelfde — er zijn stoptreinen, sneltreinen, en zelfs inte
 Bron: [Wikipedia](https://nl.wikipedia.org/wiki/Lijst_van_treincategorie%C3%ABn_in_Belgi%C3%AB)
 
 ```js
+import * as Inputs from "npm:@observablehq/inputs";
+
 function monthToSeason(date) {
   const monthIndex = (month) => {
     if ([1, 2, 12].includes(month)) return 0;
@@ -26,7 +28,7 @@ function monthToSeason(date) {
     if ([6, 7, 8].includes(month)) return 2;
     return 3;
   }
-  return ['winter', 'spring', 'summer', 'autumn'][monthIndex(date.getMonth() + 1)]
+  return ['Winter', 'Lente', 'Zomer', 'Herfst'][monthIndex(date.getMonth() + 1)]
 }
 ```
 
@@ -95,7 +97,8 @@ function bubbleChart() {
 
 // === Custom Annotations ===
     const annotations = [
-        {name: "INT", label: "INT", dx: -70, dy: 40}
+        {name: "INT", label: "INT", dx: -70, dy: 40},
+        {name: "ICT", label: "ICT", dx: -70, dy: 40}
     ];
 
     for (const annotation of annotations) {
@@ -108,8 +111,8 @@ function bubbleChart() {
 
         // Line from label to bubble
         svg.append("line")
-            .attr("x1", y + 3)
-            .attr("y1", x - 3)
+            .attr("x1", y + 4)
+            .attr("y1", x - 5)
             .attr("x2", ty)
             .attr("y2", tx)
             .attr("stroke", color(annotation.name))
@@ -134,24 +137,23 @@ view(bubbleChart());
 
 De visualisatie maakt meteen duidelijk dat sommige treintypes veel vaker voorkomen dan andere. Om die verschillen verder te onderzoeken, kijken we ook naar hoe de aanwezigheid van elk treintype doorheen de tijd evolueert.
 ```js
-import * as Inputs from "npm:@observablehq/inputs";
-
 const train_types = Array.from(new Set(train_data.map(d => d["Train type"])));
 
 const selected_types_input = view(Inputs.checkbox(train_types, {
     value: train_types,
-    label: "Select train types to display",
+    label: "Selecteer trein types om te tonen",
     sort: true
 }));
 ```
 
 ```js
 Plot.plot({
-    y: { grid: true, label: "Number of operated trains" },
-    x: { type: "utc", label: "Month" },
+    y: { grid: true, label: "Aantal geopereerde treinen" },
+    x: { type: "utc", label: "Maand" },
     color: {
         type: "categorical",
         domain: train_types,
+        legend: true
         // range: ["#4682B4", "#FFA500", "#228B22", "#9370DB", "#DC143C", "#DAA520"]
     },
     marks: [
@@ -179,17 +181,28 @@ Daarom nemen we deze treintypes niet altijd mee in verdere vergelijkingen of ver
 Wanneer we de stiptheid van de treinen door de jaren heen bekijken, kunnen we mogelijk trends ontdekken: is de situatie verbeterd of net verslechterd? Hieronder tonen we dat aan de hand van een interactieve line chart.
 
 ```js
+const train_types_insights = Array.from(new Set(train_data.map(d => d["Train type"])));
+
+const selected_types_input_insights = view(Inputs.checkbox(train_types, {
+    value: train_types,
+    label: "Selecteer trein types om te tonen",
+    sort: true
+}));
+```
+
+```js
 Plot.plot({
-    y: { grid: true, label: "Punctuality (%)", domain: [0, 100] },
-    x: { type: "utc", label: "Month" },
+    y: { grid: true, label: "Punctualiteit (%)", domain: [0, 100] },
+    x: { type: "utc", label: "Maand" },
     color: {
         type: "categorical",
-        domain: train_types,
+        domain: train_types_insights,
+        legend: true,
         // range: ["#4682B4", "#FFA500", "#228B22", "#9370DB", "#DC143C", "#DAA520"]
     },
     marks: [
         Plot.lineY(
-            sorted_train_data.filter(d => selected_types_input.includes(d["Train type"])),
+            sorted_train_data.filter(d => selected_types_input_insights.includes(d["Train type"])),
             {
                 x: "Month",
                 y: "Punctuality",
@@ -206,7 +219,7 @@ Hoewel we niet voor elk treintype gegevens uit elk jaar hebben, springt één di
 Om te onderzoeken of het seizoen invloed heeft op de vertragingen, visualiseren we per treintype de gemiddelde vertraging per seizoen.
 
 ```js
-const seasonOrder = ({winter: 0, spring: 1, summer: 2, autumn: 3}); 
+const seasonOrder = ({Winter: 0, Lente: 1, Zomer: 2, Herfst: 3}); 
 const grouped_and_normalized_by_season = d3.rollups(seasonal_train_data,
     v => {
         const total_delay = d3.sum(v, d => d["Minutes of delay"]);
@@ -245,71 +258,46 @@ const gridChartsData = normalized.sort((a, b) => d3.ascending(seasonOrder[a["sea
     ...layoutMap.get(data["Train type"])
 }));
 
-const colorA = d3.scaleOrdinal()
-    .domain(["spring", "summer", "autumn", "winter"])
-    .range(["green", "orange", "red", "blue"]);
+const color = d3.scaleOrdinal()
+    .domain(["Winter", "Lente", "Zomer", "Herfst"])
+    .range(["#4B9CD3","#8BC34A","#FFC107","#FF5722"]);
 
 const row1 = gridChartsData.filter(d => d["facetRow"] === 0);
 const row2 = gridChartsData.filter(d => d["facetRow"] === 1);
 ```
 
 ```js
-display(Plot.plot({
-  facet: {
-    data: row1,
-    x: "Train type",
-    columns: 3
-  },
-  x: {
-    label: "Season"
-  },
-  y: {
-    label: "Normalized delay",
-    domain: [0, Math.min(d3.max(row1, e => e["Normalized^2 delay"]) + 0.2, 1)],
-    grid: true
-  },
-  marks: [
-    Plot.barY(
-        row1, 
-        {
-            x: "season", 
-            y: "Normalized^2 delay", 
-            fill: d => colorA(d["season"]), 
-            sort: {x: "x", order: null},
-            tip: true
-        }),
-  ],
-  marginBottom: 40
-}));
-```
-```js
-display(Plot.plot({
-  facet: {
-    data: row2,
-    x: "Train type",
-    columns: 3
-  },
-  x: {
-    label: "Season"
-  },
-  y: {
-    label: "Normalized delay",
-    domain: [0, Math.min(d3.max(row2, e => e["Normalized^2 delay"]) + 0.2, 1)],
-    grid: true
-  },
-  marks: [
-    Plot.barY(
-        row2,
-        {
-            x: "season",
-            y: "Normalized^2 delay",
-            fill: d => colorA(d["season"]),
-            sort: {x: "x", order: null},
-            tip: true
-        }),
-  ],
-  marginBottom: 40
-}));
+for (const row of [row1, row2]) {
+    display(html`<div style="margin-bottom: 1rem; margin-top: 1rem">
+    ${Plot.plot({
+    facet: {
+        data: row,
+        x: "Train type",
+        columns: 3,
+        label: "Trein type"
+    },
+    x: {
+        label: "Seizoen"
+    },
+    y: {
+        label: "Genormaliseerde vertraging",
+        domain: [0, Math.min(d3.max(row, e => e["Normalized^2 delay"]) + 0.2, 1)],
+        grid: true
+    },
+    marks: [
+        Plot.barY(
+            row, 
+            {
+                x: "season", 
+                y: "Normalized^2 delay", 
+                fill: d => color(d["season"]), 
+                sort: {x: "x", order: null},
+                tip: true
+            }),
+    ],
+    marginBottom: 40
+    })}`);
+}
 ```
 
 Op basis van al deze grafieken samen kunnen we echter geen duidelijk verband vaststellen tussen seizoen en vertraging. Zo zien we geen algemene trend over al de treintypes heen. De variaties lijken eerder willekeurig dan seizoensgebonden. Echter, als we ons beperken tot de 3 treintypes waarvoor we over alle jaren consistente data hebben, valt er wel iets interessants op.
@@ -385,10 +373,6 @@ const result = trains.flatMap(t => {
 
     return units;
 });
-
-const color = d3.scaleOrdinal()
-    .domain(filtered_train_types.map(d => d.season))
-    .range(["#4B9CD3","#8BC34A","#FFC107","#FF5722"]);
 ```
 
 ```js
@@ -400,7 +384,7 @@ display(
             columns: result.length,    // force one column per train type
             label:   null              // you can hide the “type” header if you like
         },
-        title: "Normalized delay per season per train type",
+        title: "Genormalizeerde vertraging per seizoen per trein type",
         x: { axis: null },
         y: { axis: null },
         color: {
@@ -431,19 +415,19 @@ const filtered_data = train_data
         "Average Delay": d["Minutes of delay"] / d["Number of operated trains"]
     }));
 
-const delay_mode = view(Inputs.select(["Average Delay (relative)", "Minutes of delay (absolute)"], {
-    label: "Choose delay display mode",
-    value: "Average Delay (relative)"
+const delay_mode = view(Inputs.select(["Gemidelde vertraging (relatief)", "Minuten vertraging (absoluut)"], {
+    label: "Kies vertoning modus",
+    value: "Gemidelde vertraging (relatief)"
 }));
 ```
 
 ```js
 Plot.plot({
-  title: `Boxplot of ${delay_mode} per Train Type`,
+  title: `Boxplot van ${delay_mode} per Trein Type`,
   height: 400,
   marginLeft: 80,
   x: { label: delay_mode },
-  y: { label: "Train Type" },
+  y: { label: "Trein Type" },
   color: { legend: false },
   marks: [
     Plot.boxX(filtered_data, {
@@ -505,18 +489,19 @@ Plot.plot({
   marginLeft: 60,
   y: {
     grid: true,
-    label: "Cumulative Minutes of Delay"
+    label: "Gecumuleerde Minuten Vertraging"
   },
   x: {
     grid: true,
     type: "utc",
-    label: "Month"
+    label: "Maand"
   },
   color: {
     type: "categorical",
     domain: included_types,
     range: ["#4682B4", "#FFA500", "#228B22", "#9370DB", "#DC143C", "#DAA520"],
-    label: "Train type"
+    label: "Train type",
+    legend: true
   },
   marks: [
     Plot.areaY(cumulative_data, {
