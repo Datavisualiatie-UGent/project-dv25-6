@@ -14,7 +14,7 @@ Niet elke trein is hetzelfde — er zijn stoptreinen, sneltreinen, en zelfs inte
 | **L** | **Lokale trein** – stopt aan elk station langs het traject. |
 | **S** | **Stoptrein** – bedient voorstedelijke gebieden en stopt frequent. |
 | **INT** | **Internationale trein** – klassieke grensoverschrijdende verbindingen. |
-| **ICT** | **Internationale toeristentrein** – gericht op toeristische bestemmingen. |
+| **ICT** | **Toeristentrein** – gericht op toeristische bestemmingen. |
 
 Bron: [Wikipedia](https://nl.wikipedia.org/wiki/Lijst_van_treincategorie%C3%ABn_in_Belgi%C3%AB)
 
