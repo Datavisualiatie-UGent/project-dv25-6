@@ -219,7 +219,7 @@ Hoewel we niet voor elk treintype gegevens uit elk jaar hebben, springt één di
 Om te onderzoeken of het **seizoen invloed heeft op de vertragingen**, visualiseren we per treintype de gemiddelde vertraging per seizoen.
 
 ```js
-const seasonOrder = ({Winter: 0, Lente: 1, Zomer: 2, Herfst: 3}); 
+const seasonOrder = ({Winter: 0, Lente: 1, Zomer: 2, Herfst: 3});
 const grouped_and_normalized_by_season = d3.rollups(seasonal_train_data,
     v => {
         const total_delay = d3.sum(v, d => d["Minutes of delay"]);
@@ -286,11 +286,11 @@ for (const row of [row1, row2]) {
     },
     marks: [
         Plot.barY(
-            row, 
+            row,
             {
-                x: "season", 
-                y: "Normalized^2 delay", 
-                fill: d => color(d["season"]), 
+                x: "season",
+                y: "Normalized^2 delay",
+                fill: d => color(d["season"]),
                 sort: {x: "x", order: null},
                 tip: true
             }),
@@ -384,7 +384,6 @@ display(
             columns: result.length,    // force one column per train type
             label:   null              // you can hide the “type” header if you like
         },
-        title: "Genormalizeerde vertraging per seizoen per trein type",
         x: { axis: null },
         y: { axis: null },
         color: {
@@ -396,7 +395,7 @@ display(
             Plot.cell(result, Plot.stackX({
                 y: (_, i) => i % 10,
                 fill: "season",
-                title: d => `${d.season} - ${percentagePerSeasonAndTrainType[d.type][d.season]}%` 
+                title: d => `${d.season} - ${percentagePerSeasonAndTrainType[d.type][d.season]}%`
             }))
         ]
     })
@@ -423,7 +422,6 @@ const delay_mode = view(Inputs.select(["Gemidelde vertraging (relatief)", "Minut
 
 ```js
 Plot.plot({
-  title: `Boxplot van ${delay_mode} per Trein Type`,
   height: 400,
   marginLeft: 80,
   x: { label: delay_mode },
