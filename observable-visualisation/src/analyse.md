@@ -71,7 +71,7 @@ const packLayout = d3.pack()
 function bubbleChart() {
     const root = packLayout(hierarchyData);
     const svg = d3.create("svg")
-        .attr("viewBox", [-50, 50, 600, 300])
+        .attr("viewBox", [0, 50, 700, 300])
         .attr("style", "max-width: 100%; height: auto;");
 
     const color = d3.scaleOrdinal(d3.schemeCategory10);
